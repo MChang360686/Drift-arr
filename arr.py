@@ -1,30 +1,40 @@
-import csv
+import pandas as pd
 
 
-# Make classes
-class Ultimate_Parent:
-    def __init__(self, children):
-        self.children = children
-        pass
+# TODO figure out how to get the Parents IDs and figure out who the Ultimate Parent is
+# TODO figure out how to append money to acct - make new lambda?
+# TODO figure out how to check active subscriptions by getting the date in m/d/y with a lambda
 
-    def mnd(self):
-        pass
+# lambda functions 
+add = lambda a, b: a + b
+sub = lambda a, b: a - b
+discount = lambda a, b: a * (1 - b)
+existsInDict = lambda key, dict: print(f"Duplicate Found: {key}") if key in dict else ''
 
-class Parent:
-    def __init__(self, parent, child):
-        self.parent = parent
-        self.child = child
-        pass
 
-    def mnd(self):
-        pass
 
-class Child:
-    def __init__(self, parent):
-        self.parent = parent
+def sort(accts, subscrp, subscritems):
+    acctAndPrnt = {}
+    df = pd.read_csv(accts)
 
-    def mnd(self):
-        pass
+    # First add everything to a dict so access time is O(1)
+    for index, row in df.iterrows():
+        # Check if already exists in dict
+        existsInDict(row['id'], acctAndPrnt)
+
+        # Otherwise, just add items to dict
+        acctID = row['id']
+        parID = row['parent_id']
+        acctAndPrnt[acctID] = parID
+
+    print('Finished')
+    pass
+
 
 if __name__ == '__main__':
-    pass
+    filepath = "accounts.csv"
+    fp2 = "subscriptions.csv"
+    fp3 = "subscription_items.csv"
+
+
+    sort(filepath, fp2, fp3)
