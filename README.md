@@ -18,7 +18,9 @@ Notes
     - Search using Pandas?
 
 Assumptions
-- Each account is "unique"
+- Each account is "unique" for the provided dataset
     - How do we deal with duplicates though?
         - Try catch finally?
         - Monads?
+- Companies only pay when the subscription ends
+    - Date is type str when we pull it from csv
