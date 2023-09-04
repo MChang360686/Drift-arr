@@ -1,0 +1,46 @@
+
+To find ultimate_parent_id, I would
+1. check current account id in accounts.csv
+2. check parent column
+3. If parent is empty then this is the ultimate_parent
+4. Otherwise, check the parent of the first account
+5. Repeat until parent column is empty
+
+check dataframe
+if parent is empty
+    Finish
+else
+    while don't know parent
+        check dict 1 for parent account
+        get value of parent account
+        if value is empty
+            know parent
+            Finish
+
+
+To find arr I would
+1. Get account_id
+2. check dict 2 and 3
+2. match subscription_id to money owed by that specific account
+
+check dataframe
+get account_id
+match account_id to subscription_id in dict 2
+check dict 3 for total money owed (precalculated into dict3)
+
+To find hierarchy_arr I would
+1. Using dictionary comprehension, check which values have 
+the account in question as parent. (BFS?)
+2. using for each on list, Append their money to the amount in arr
+3. Check each item in list for more children
+4. Nest the loops? (DFS?)
+
+check dataframe for account_id
+amt = arr
+Use dictionary comprehension to make a list of all the children of the 
+account in question
+for item in list
+    amt += moneyOwed(child)
+    check if child has children 
+    if more children 
+        append children to list
