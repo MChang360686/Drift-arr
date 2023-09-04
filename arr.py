@@ -7,8 +7,8 @@ import argparse
 
 
 # TODO how to differentiate from dmy instead of american mdy
-# TODO fix getHierarchyArr() - try separating finding children and sum owed
-# TODO how to handle if an account has parents but NO subscription/subscription items?
+# TODO unit test arr() and getHierarchyArr()
+
 
 
 # lambda functions 
@@ -51,7 +51,7 @@ def sortAccounts(accts):
     return acctAndPrnt
 
 
-# Return dict with subscriptionID: accountID
+# Return dict with {accountid : [list of subscriptions]}
 def acctSubscriptions(subscriptions):
     acctAndSubscriptions = {}
     df2 = pd.read_csv(subscriptions)
@@ -151,7 +151,7 @@ def findUltParent(accountId, d):
     while knowParent == False:
         if (d[childID] == '' or pd.isna(d[childID]) == True or d[childID] == None):
             # if value IS empty, return
-            parent = d[childID]
+            parent = childID
             knowParent = True
         elif (d[childID] != '' or pd.isna(d[childID]) == False):
             # if value is NOT empty, get value from dict1 again
@@ -206,6 +206,16 @@ def getHierarchyArr(accountId, arr, d1, d2, d3, d4):
         current_account = queue.popleft()
         visited.add(current_account)
 
+        # add current child account's arr value
+        # to hierarchyArr
+        try:
+            childSubscriptions = d2[current_account]
+
+            for subscription in childSubscriptions:
+                hierarchyArr += d3[subscription]
+        except KeyError:
+            continue
+
         # Check if the account has children
         if existsDict(current_account, d4):
             children = d4[current_account]
@@ -233,14 +243,16 @@ def fillColumns(fp, fp2, fp3):
 
     for index, row in df5.iterrows():
         acctId = row['id']
-        row['ultimate_parent_id'] = findUltParent(acctId, dict1)
-        row['arr'] = getArr(acctId, dict2, dict3)
-        row['hierarchy_arr'] = getHierarchyArr(acctId, row['arr'], dict1, dict2, dict3, dict4)
+        df5.loc[index, 'ultimate_parent_id'] = findUltParent(acctId, dict1)
+        df5.loc[index, 'arr'] = getArr(acctId, dict2, dict3)
+        df5.loc[index, 'hierarchy_arr'] = getHierarchyArr(acctId, row['arr'], dict1, dict2, dict3, dict4)
 
-        print(row['ultimate_parent_id'], row['arr'], row['hierarchy_arr'])
+        #print(row['ultimate_parent_id'], row['arr'], row['hierarchy_arr'])
+    
+    print(df5)
 
     # Finish by writing dataframe to csv
-    df5.to_csv('solutions.csv', index=False)
+    df5.to_csv('solutions.csv', index=False, mode='w')
 
 
 if __name__ == '__main__':
