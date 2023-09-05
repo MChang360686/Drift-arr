@@ -6,11 +6,6 @@ Basic Premise - Keep track of Ultimate Parents using an Associative Array (Dict)
 TODO
 1) Write Python version
 2) Make a flowchart graphic and add comments
-3) Make a MySQL DB and compare
-4) Write a C version
-5) Write script to compare results for Python and C
-6) Write a Java version
-
 
 Assumptions
 - Each account is "unique" for the provided dataset in accounts.csv
@@ -28,3 +23,9 @@ Unit Tests
 
 Questions
 - is if(statement): or if(statement == True): better? 
+
+Things I want to do
+1) Make a MySQL DB and compare
+2) Write a C version
+3) Write script to compare results for Python and C
+4) Write a Java version

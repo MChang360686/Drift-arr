@@ -4,18 +4,17 @@ To find ultimate_parent_id, I would
 2. check parent column
 3. If parent is empty then this is the ultimate_parent
 4. Otherwise, check the parent of the first account
-5. Repeat until parent column is empty
+5. Repeat until value from parent column is empty
 
-check dataframe
-if parent is empty
-    Finish
-else
-    while don't know parent
-        check dict 1 for parent account
-        get value of parent account
-        if value is empty
-            know parent
+function(child_id, dict)
+    while don't know ult_parent
+        if check dict 1 for key child is empty
+            parent = child_id (we know it's an ultimate parent)
             Finish
+        else if
+            check dict 1 for key child account isn't empty
+                get value of parent account
+                child = parent account
 
 
 To find arr I would
@@ -23,24 +22,36 @@ To find arr I would
 2. check dict 2 and 3
 2. match subscription_id to money owed by that specific account
 
-check dataframe
-get account_id
-match account_id to subscription_id in dict 2
-check dict 3 for total money owed (precalculated into dict3)
+function(id, dict2, dict3)
+    arr = 0
+    try find id in dict2
+        except keyerror
+
+    for subscription in dict2[id]
+        try check subscription_id in dict 2 matches key in dict 3
+            append money owed in dict3 to arr (precalculated into dict3)
+            except keyerror
+
 
 To find hierarchy_arr I would
-1. Using dictionary comprehension, check which values have 
-the account in question as parent. (BFS?)
-2. using for each on list, Append their money to the amount in arr
-3. Check each item in list for more children
-4. Nest the loops? (DFS?)
+1. check for children
+2. BFS descendants
+    - For each child in dict 2, get its subscriptions
+    - For each subscription, check how much it costs and append it to hierarchy_arr
+    - check if child exists in dict 4, and had children
+    - append existing children to queue
+3. return hierarchy_arr
 
-check dataframe for account_id
-amt = arr
-Use dictionary comprehension to make a list of all the children of the 
-account in question
-for item in list
-    amt += moneyOwed(child)
-    check if child has children 
-    if more children 
-        append children to list
+function(account_id, arr, d2, d3, d4):
+hierarchy_arr = arr (start with what current account owes)
+
+initialize queue
+BFS
+    get item from queue
+    check if it had subscriptions
+    check if subscriptions cost money
+        append money to hierarchy_arr
+    check if item had children
+        append children if solutions
+        
+return hierarchy_arr

@@ -1,9 +1,25 @@
 import unittest
-from arr import getHierarchyArr
+from arr import getHierarchyArr, countRevenue, getArr
 
 """
 File for unit testing arr.py
 """
+
+
+class testCountRevenue(unittest.TestCase):
+
+    """
+    What if we have Day/Month/Year dates instead of
+    US style Month/Day/Year?
+    """
+
+    def testDates(self):
+        date = '9/5/23' # 9/5/23 Sept 5th 2023
+        date2 = '9/30/23'
+        result = countRevenue(date, date2)
+        expectedResult = True
+        self.assertEqual(result, expectedResult)
+
 
 
 class TestGetHierarchyArr(unittest.TestCase):
@@ -18,22 +34,40 @@ class TestGetHierarchyArr(unittest.TestCase):
     NOTE: The function was extending child with a list of length 0, which led
     to infinite length
 
+    Solution: Add 4th dictionary and refactor dict 2.  Then build around this.
+
     """
     def test_child_id_extension(self):
-        # Define sample data and dictionaries
+        # Define data, we want to call account 1
+        # and its child, 1, who has subscriptions a, b, and c
+        # worth 100, 200, and 300 respectively
         account_id = 1
-        arr = []
-        d1 = {1: 2, 2: 3, 3: 1}
-        d2 = {4: 1, 5: 2, 6: 3}
-        d3 = {7: 'a', 8: 'b', 9: 'c'}
+        arr = 100
+        d2 = {1: ['a', 'b', 'c'], 2: ['a', 'b'], 3: ['a']}
+        d3 = {'a': 100, 'b': 200, 'c': 300}
+        d4 = {1: [1], 2: [2], 3: [2, 3]}
 
-        # Call the function you're testing
-        result = getHierarchyArr(account_id, arr, d1, d2, d3)
-        print(result)
+        
+        result = getHierarchyArr(account_id, arr, d2, d3, d4)
 
-        # Assert that the childId list has been extended correctly
-        expected_child_ids = [1, 2, 3]  # Modify this based on your sample data
-        self.assertEqual(result, arr)  # Assert that the return value is as expected
+    
+        expected_arr = 700  # 100 + 100 + 200 + 300
+        self.assertEqual(result, expected_arr) 
+
+
+class testGetArr(unittest.TestCase):
+
+    """
+    Check if getArr() is functional
+    """
+
+    def testArr(self):
+        dict2 = {'a': ['b', 'c', 'd']}
+        dict3 = {'b': 1200, 'c': 100, 'd': 500}
+        result = getArr('a', dict2, dict3)
+        expectedResult = 1800
+        self.assertEqual(result, expectedResult)
+
 
 
 if __name__ == '__main__':

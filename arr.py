@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import argparse
 
 
-# TODO how to differentiate from dmy instead of american mdy
+# TODO try to differentiate from dmy instead of american mdy using argparse?
 # TODO unit test arr() and getHierarchyArr()
 
 
@@ -18,18 +18,22 @@ total = lambda quantity, price, discount: quantity * price * (1 - discount)
 duplicateAccount = lambda key, dict: print(f"Duplicate Found: {key}") if key in dict else ''
 existsDict = lambda key, dict: True if key in dict else False
 
+
 """
 Compares given string date with today's date
 to check if a subscription is still valid
 """
-def countRevenue(endDate):
+def countRevenue(startDate, endDate):
     today = datetime.now().date()
-    compareDate = datetime.strptime(endDate, '%Y-%m-%d').date()
-    if(today <= compareDate):
-        # End date is today or in the future subscription is NOT over
+    endDateTime = datetime.strptime(endDate, '%Y-%m-%d').date()
+    startDateTime = datetime.strptime(startDate, '%Y-%m-%d').date()
+    if(today >= startDateTime and today <= endDateTime):
+        # End date is today or in the future, Start date is today or past
+        # subscription is NOT over
         return True
-    elif(today > compareDate):
+    elif(today < startDateTime or today > endDateTime):
         # End date is in the past, subscription IS over
+        # OR subscription hasn't started yet.
         return False
 
 
@@ -84,10 +88,11 @@ def moneyOwed(subscriptionItems):
         quant = row['quantity']
         prce = row['list_price']
         disc = row['discount']
+        startDate = row['start_date']
         endDate = row['end_date']
         subtotal = 0
 
-        if (quant == 0 or disc == 1 or countRevenue(endDate) == False):
+        if (quant == 0 or disc == 1 or countRevenue(startDate, endDate) == False):
             """
             If quantity = 0 OR discount = 1 OR subscription isn't over we can skip
             They either bought nothing OR it was free
@@ -187,7 +192,7 @@ Takes account_id, arr, and checks dict1 - dict3
 to find the amount of money made by the hierarchy
 where account_id is the parent 
 """
-def getHierarchyArr(accountId, arr, d1, d2, d3, d4):
+def getHierarchyArr(accountId, arr, d2, d3, d4):
     hierarchyArr = arr
 
     try:
@@ -230,10 +235,10 @@ def getHierarchyArr(accountId, arr, d1, d2, d3, d4):
 
 
 """
-Make the 3 dictionaries and fill out
+Make the 4 dictionaries and fill out
 ultimate_parent, arr, hierarchy_arr 
 using the helper methods above
-"""
+""" 
 def fillColumns(fp, fp2, fp3):
     dict1 = sortAccounts(fp)
     dict2 = acctSubscriptions(fp2)
@@ -244,12 +249,13 @@ def fillColumns(fp, fp2, fp3):
     for index, row in df5.iterrows():
         acctId = row['id']
         df5.loc[index, 'ultimate_parent_id'] = findUltParent(acctId, dict1)
-        df5.loc[index, 'arr'] = getArr(acctId, dict2, dict3)
-        df5.loc[index, 'hierarchy_arr'] = getHierarchyArr(acctId, row['arr'], dict1, dict2, dict3, dict4)
+        tempArr = getArr(acctId, dict2, dict3)
+        df5.loc[index, 'arr'] = tempArr
+        df5.loc[index, 'hierarchy_arr'] = getHierarchyArr(acctId, tempArr, dict2, dict3, dict4)
 
         #print(row['ultimate_parent_id'], row['arr'], row['hierarchy_arr'])
     
-    print(df5)
+    #print(df5)
 
     # Finish by writing dataframe to csv
     df5.to_csv('solutions.csv', index=False, mode='w')
