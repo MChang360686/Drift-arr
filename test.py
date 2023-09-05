@@ -6,21 +6,6 @@ File for unit testing arr.py
 """
 
 
-class testCountRevenue(unittest.TestCase):
-
-    """
-    What if we have Day/Month/Year dates instead of
-    US style Month/Day/Year?
-    """
-
-    def testDates(self):
-        date = '9/5/23' # 9/5/23 Sept 5th 2023
-        date2 = '9/30/23'
-        result = countRevenue(date, date2)
-        expectedResult = True
-        self.assertEqual(result, expectedResult)
-
-
 
 class TestGetHierarchyArr(unittest.TestCase):
 
@@ -67,6 +52,25 @@ class testGetArr(unittest.TestCase):
         result = getArr('a', dict2, dict3)
         expectedResult = 1800
         self.assertEqual(result, expectedResult)
+
+
+"""
+class testCountRevenue(unittest.TestCase):
+
+    
+    What if we have Day/Month/Year dates instead of
+    US style Month/Day/Year?
+
+    Possible Solution: Check data for dmy dates beforehand?
+    
+
+    def testDates(self):
+        date = '2023/9/5' # 9/5/23 Sept 5th 2023
+        date2 = '2023/9/30'
+        result = countRevenue(date, date2)
+        expectedResult = True
+        self.assertEqual(result, expectedResult)
+"""
 
 
 

@@ -17,10 +17,6 @@ Assumptions
 how much money the hierarchy INCLUDING the given account NOT
 how much money the hierarchy as a WHOLE has made
 
-Unit Tests
-- Date - what if today is the deadline?
-- Money - Are we getting the full amount?
-
 Questions
 - is if(statement): or if(statement == True): better? 
 

@@ -7,8 +7,8 @@ import argparse
 
 
 # TODO try to differentiate from dmy instead of american mdy using argparse?
-# TODO unit test arr() and getHierarchyArr()
-
+# TODO finish graphic
+# TODO calculate runtime wrt big O
 
 
 # lambda functions 
@@ -99,8 +99,8 @@ def moneyOwed(subscriptionItems):
             OR their subscription is not active
             """
             subtotal = 0
-        elif(quant > 0 and disc < 1.0):
-            # 
+        elif(quant > 0 and disc < 1.0 and countRevenue(startDate, endDate) == True):
+            # Otherwise subscription is active
             subtotal = total(quant, prce, disc)
         else:
             # Check negative quant and negative disc?
@@ -130,7 +130,7 @@ DFS is O(v+e), dict comprehension seems slow, we want to speed things up
 Takes dict 1 and makes a dict that is the complete opposite
 {parent account id : [children]}
 """
-def findChildren(d1, d2):
+def findChildren(d1):
     parentAndChildren = {}
     
     for key, value in d1.items():
@@ -243,7 +243,7 @@ def fillColumns(fp, fp2, fp3):
     dict1 = sortAccounts(fp)
     dict2 = acctSubscriptions(fp2)
     dict3 = moneyOwed(fp3)
-    dict4 = findChildren(dict1, dict2)
+    dict4 = findChildren(dict1)
     df5 = pd.read_csv(fp)
 
     for index, row in df5.iterrows():
