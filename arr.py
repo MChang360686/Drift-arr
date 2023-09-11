@@ -7,16 +7,31 @@ import argparse
 
 
 # TODO try to differentiate from dmy instead of american mdy using argparse?
-# TODO finish graphic
-# TODO calculate runtime wrt big O
+# TODO use Objects in one dictionary
+
 
 
 # lambda functions 
-add = lambda a, b: a + b
-sub = lambda a, b: a - b
 total = lambda quantity, price, discount: quantity * price * (1 - discount)
 duplicateAccount = lambda key, dict: print(f"Duplicate Found: {key}") if key in dict else ''
 existsDict = lambda key, dict: True if key in dict else False
+
+
+"""
+Create data objects here
+
+data will be stored in objects using the following key value pair
+{accountID : object}
+"""
+
+class account:
+    def __init__(self, id, subId, subscripItems, ultParent, arr, hierArr):
+        self.id = id
+        self.subId = subId
+        self.subscripItems = subscripItems
+        self.ultParent = ultParent
+        self.arr = arr
+        self.hierArr = hierArr
 
 
 """
@@ -31,7 +46,7 @@ def countRevenue(startDate, endDate):
         # End date is today or in the future, Start date is today or past
         # subscription is NOT over
         return True
-    elif(today < startDateTime or today > endDateTime):
+    else:
         # End date is in the past, subscription IS over
         # OR subscription hasn't started yet.
         return False
