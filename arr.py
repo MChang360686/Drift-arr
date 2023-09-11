@@ -27,11 +27,32 @@ data will be stored in objects using the following key value pair
 class account:
     def __init__(self, id, subId, subscripItems, ultParent, arr, hierArr):
         self.id = id
-        self.subId = subId
-        self.subscripItems = subscripItems
+        self.subId = [subId]
+        self.subscripItems = [subscripItems]
         self.ultParent = ultParent
         self.arr = arr
         self.hierArr = hierArr
+
+    def getSub(self):
+        return self.subId
+    
+    def setSubs(self, id):
+        self.subId = id
+
+    def getSubItems(self):
+        return self.subscripItems
+    
+    def setSubItems(self, item):
+        self.subscripItems.append(item)
+
+    def getUltParent(self):
+        return self.ultParent
+
+    def getArr(self):
+        return self.arr
+    
+    def getHierArr(self):
+        return self.hierArr
 
 
 """
@@ -52,28 +73,28 @@ def countRevenue(startDate, endDate):
         return False
 
 
-# Return dict with accountName : parentAccount
-def sortAccounts(accts):
-    acctAndPrnt = {}
-    df = pd.read_csv(accts)
+# go through accounts and add key value pairs
+# {account id : object} to the dictionary
+def sortAccounts(acctFile, dict):
 
-    for index, row in df.iterrows():
+    df = pd.read_csv(acctFile)
+
+    for row in df.iterrows():
         # Check if account already exists in dict
-        duplicateAccount(row['id'], acctAndPrnt)
+        duplicateAccount(row['id'], dict)
 
-        # Otherwise, just add items to dict
-        acctID = row['id']
-        parID = row['parent_id']
-        acctAndPrnt[acctID] = parID
+        # Otherwise create a new account object and store in dictionary
+        accountId = row['id']
+        newAccount = account(accountId)
+        dict[accountId] = newAccount
 
     print('Finished dict 1')
-    return acctAndPrnt
+    return dict
 
 
 # Return dict with {accountid : [list of subscriptions]}
-def acctSubscriptions(subscriptions):
-    acctAndSubscriptions = {}
-    df2 = pd.read_csv(subscriptions)
+def acctSubscriptions(subscriptionFile, dict):
+    df2 = pd.read_csv(subscriptionFile)
 
     for index, row in df2.iterrows():
         # Check if account already exists in dict
