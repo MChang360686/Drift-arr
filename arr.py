@@ -3,10 +3,8 @@ from datetime import datetime
 from collections import deque
 import time
 from dotenv import load_dotenv
-import argparse
 
 
-# TODO try to differentiate from dmy instead of american mdy using argparse?
 # TODO use Objects in one dictionary
 
 
@@ -24,11 +22,14 @@ data will be stored in objects using the following key value pair
 {accountID : object}
 """
 
-class account:
-    def __init__(self, id, subId, subscripItems, ultParent, arr, hierArr):
+class Account:
+    def __init__(self, id, subId, subscripItems, children, descendants, parent, ultParent, arr, hierArr):
         self.id = id
         self.subId = [subId]
         self.subscripItems = [subscripItems]
+        self.children = [children]
+        self.descendants = [descendants]
+        self.parent = parent
         self.ultParent = ultParent
         self.arr = arr
         self.hierArr = hierArr
@@ -45,11 +46,32 @@ class account:
     def setSubItems(self, item):
         self.subscripItems.append(item)
 
+    def getChildren(self):
+        return self.children
+    
+    def setChildren(self, child):
+        self.children.append(child)
+    
+    def getDescendants(self):
+        return self.descendants
+    
+    def getParent(self):
+        return self.parent
+    
+    def setParent(self, par):
+        self.parent = par
+
     def getUltParent(self):
         return self.ultParent
+    
+    def getUltParent(self, ultPar):
+        self.ultParent = ultPar
 
     def getArr(self):
         return self.arr
+    
+    def setArr(self, value):
+        self.arr = value
     
     def getHierArr(self):
         return self.hierArr
@@ -75,49 +97,47 @@ def countRevenue(startDate, endDate):
 
 # go through accounts and add key value pairs
 # {account id : object} to the dictionary
+# Additionally, create a temporary dict for later usage
 def sortAccounts(acctFile, dict):
-
+    tempDict = {}
     df = pd.read_csv(acctFile)
 
-    for row in df.iterrows():
+    for index, row in df.iterrows():
         # Check if account already exists in dict
-        duplicateAccount(row['id'], dict)
+        #duplicateAccount(row['id'], dict)
 
         # Otherwise create a new account object and store in dictionary
         accountId = row['id']
-        newAccount = account(accountId)
+        parent = row['parent_id']
+        newAccount = Account(accountId, '', '', None, None, parent, '', 0, 0)
         dict[accountId] = newAccount
 
+        tempDict[accountId] = parent
+
     print('Finished dict 1')
-    return dict
+    return tempDict
 
 
-# Return dict with {accountid : [list of subscriptions]}
+# Go through subscriptions and check each account_id
+# Then give each 
 def acctSubscriptions(subscriptionFile, dict):
     df2 = pd.read_csv(subscriptionFile)
 
     for index, row in df2.iterrows():
-        # Check if account already exists in dict
-        duplicateAccount(row['id'], acctAndSubscriptions)
-
-        # Otherwise, just add items to dict
+        # Add items to dict
         subID = row['id']
         acctID = row['account_id']
 
-        if acctID not in acctAndSubscriptions:
-            acctAndSubscriptions[acctID] = [subID]
-        else:
-            acctAndSubscriptions[acctID].append(subID)
+        dict[acctID].getSub().append(subID)
 
     print('Finished dict 2')
-    return acctAndSubscriptions
 
 
-# Return dict with subscriptionID: moneyOwed
-def moneyOwed(subscriptionItems):
-    subscriptionAndOwed = {}
-
-    df3 = pd.read_csv(subscriptionItems)
+# Create subdict with subscriptionID: moneyOwed
+# Then, append this information to original dictionary
+def moneyOwed(subscriptionItemFile, dict):
+    subdict = {}
+    df3 = pd.read_csv(subscriptionItemFile)
 
     for index, row in df3.iterrows():
         subID = row['subscription_id']
@@ -135,90 +155,76 @@ def moneyOwed(subscriptionItems):
             OR their subscription is not active
             """
             subtotal = 0
-        elif(quant > 0 and disc < 1.0 and countRevenue(startDate, endDate) == True):
+        elif(countRevenue(startDate, endDate) == True):
             # Otherwise subscription is active
             subtotal = total(quant, prce, disc)
+
+        # Append subtotal to subdict
+        if subID in subdict:
+            subdict[subID] += subtotal
         else:
-            # Check negative quant and negative disc?
-            print("3rd case in moneyOwed, Possible Error in Dataset")
+             subdict[subID] = subtotal
 
-        """
-        Duplicates exist because some subscriptions get multiple items 
-        Therefore, there needs to be a way to append money
-        """
-
-        if(existsDict(subID, subscriptionAndOwed) == True):
-            # key/subscription exists in dict
-            # We don't want to replace, we want to append
-            subscriptionAndOwed[subID] += subtotal
-        elif(existsDict(subID, subscriptionAndOwed) == False):
-            # key/subscription does NOT exist in dict
-            # Create a new one
-            subscriptionAndOwed[subID] = subtotal
+    # Now append this information to dict
+    for key, value in dict.items():
+        subscriptions = value.getSub()
+        for subscription in subscriptions:
+            for sub in subscription:
+                if sub in subdict:
+                    value.setArr(subdict[sub])
+        
 
     print('Finished dict 3')
-    return subscriptionAndOwed
 
 
 """
-Make a 4th dictionary that is the opposite of dict 1
 DFS is O(v+e), dict comprehension seems slow, we want to speed things up
-Takes dict 1 and makes a dict that is the complete opposite
-{parent account id : [children]}
+Takes dict and gives each data object a list of children
 """
-def findChildren(d1):
-    parentAndChildren = {}
+def findChildren(dict):
     
-    for key, value in d1.items():
-        if value is None:
-            parentAndChildren[key].append(key)
-        elif value not in parentAndChildren:
-            parentAndChildren[value] = [key]
+    for key, value in dict.items():
+        if value.getParent() is None:
+            # No parent, so account is its own child
+            dict[key].setChild(key)
         else:
-            parentAndChildren[value].append(key)
+            # item has a parent, so it is parent's child
+            parentId = value.getParent()
+            if pd.isna(parentId) == False:
+                dict[parentId].setParent(key)
     
     print("Finished dict 4")
-    return parentAndChildren
 
 
 """
-Takes child account_id and dict1
-returns ultimate parent
-dict1 = {account_id : parent_id}
+Searches for account in dictionary
+with no parent id using temp dict from above
 """
-def findUltParent(accountId, d):
+def findUltParent(accountId, tempDict):
     childID = accountId
     knowParent = False
-    while knowParent == False:
-        if (d[childID] == '' or pd.isna(d[childID]) == True or d[childID] == None):
-            # if value IS empty, return
-            parent = childID
-            knowParent = True
-        elif (d[childID] != '' or pd.isna(d[childID]) == False):
-            # if value is NOT empty, get value from dict1 again
-            childID = d[childID]
 
-    return parent
+    while knowParent == False:
+        if (tempDict[childID] == None or tempDict[childID] == '' or pd.isna(tempDict[childID])):
+            # if value IS empty, return
+            ultParent = childID
+            knowParent = True
+        else:
+            # if value is NOT empty, get value from dict1 again
+            childID = tempDict[childID]
+
+    return ultParent
 
 
 """
 Takes account_id and checks dict2 and dict3 to
 return money owed aka arr using dictionary comprehension
 """
-def getArr(accountId, d2, d3):
+def getArr(accountId, dict):
     arr = 0
-    try:
-        # On the off chance that an account doesn't exist
-        # in d2, just return arr = 0 because no subscription
-        subId = d2[accountId]
-    except KeyError:
-        return arr
-    
-    for sub in subId:
-        try:
-            arr += d3[sub]
-        except KeyError:
-            pass
+    # Check if in dict
+    if accountId in dict:
+        arr = dict[accountId].getArr()
 
     return arr
 
@@ -228,70 +234,71 @@ Takes account_id, arr, and checks dict1 - dict3
 to find the amount of money made by the hierarchy
 where account_id is the parent 
 """
-def getHierarchyArr(accountId, arr, d2, d3, d4):
+def getHierarchyArr(accountId, arr, dict):
     hierarchyArr = arr
-
-    try:
-        children = d4[accountId]
-    except KeyError:
-        # account is child, has no children
-        # Therefore hierarchy_arr == arr 
+    
+    # If list is empty, no children, return 
+    # hierarchyArr = arr
+    if len(dict[accountId].getChildren()) > 0:
+        children = dict[accountId].getChildren()
+    else:
         return hierarchyArr
 
-    # BFS to check for children
+    # Otherwise BFS to check for children
     descendants = []
     visited = set()
     queue = deque(children)
 
     while queue:
         current_account = queue.popleft()
-        visited.add(current_account)
+        #visited.add(current_account)
+
+        if current_account == None:
+            continue
 
         # add current child account's arr value
         # to hierarchyArr
-        try:
-            childSubscriptions = d2[current_account]
-
-            for subscription in childSubscriptions:
-                hierarchyArr += d3[subscription]
-        except KeyError:
-            continue
+        if current_account in dict:
+            hierarchyArr += dict[current_account].getArr()
 
         # Check if the account has children
-        if existsDict(current_account, d4):
-            children = d4[current_account]
+        if len(dict[current_account].getChildren()) > 0:
+
+            grandchildren =  dict[current_account].getChildren()
 
             # Add children to the queue if they haven't been visited
-            for child in children:
-                if child not in visited:
-                    queue.append(child)
-                    descendants.append(child)
+            for grandChild in grandchildren:
+                if grandChild not in visited:
+                    queue.append(grandChild)
+                    descendants.append(grandChild)
 
     return hierarchyArr
 
 
 """
-Make the 4 dictionaries and fill out
+Make the dictionary and fill out
 ultimate_parent, arr, hierarchy_arr 
 using the helper methods above
 """ 
 def fillColumns(fp, fp2, fp3):
-    dict1 = sortAccounts(fp)
-    dict2 = acctSubscriptions(fp2)
-    dict3 = moneyOwed(fp3)
-    dict4 = findChildren(dict1)
+    dictionary = {}
+    tempDict = sortAccounts(fp, dictionary)
+    acctSubscriptions(fp2, dictionary)
+    moneyOwed(fp3, dictionary)
+    findChildren(dictionary)
     df5 = pd.read_csv(fp)
 
     for index, row in df5.iterrows():
         acctId = row['id']
-        df5.loc[index, 'ultimate_parent_id'] = findUltParent(acctId, dict1)
-        tempArr = getArr(acctId, dict2, dict3)
+        df5.loc[index, 'ultimate_parent_id'] = findUltParent(acctId, tempDict)
+        tempArr = getArr(acctId, dictionary)
         df5.loc[index, 'arr'] = tempArr
-        df5.loc[index, 'hierarchy_arr'] = getHierarchyArr(acctId, tempArr, dict2, dict3, dict4)
+        #df5.loc[index, 'hierarchy_arr'] = 
+        #print(getHierarchyArr(acctId, dictionary))
 
         #print(row['ultimate_parent_id'], row['arr'], row['hierarchy_arr'])
     
-    #print(df5)
+    print(df5)
 
     # Finish by writing dataframe to csv
     df5.to_csv('solutions.csv', index=False, mode='w')
