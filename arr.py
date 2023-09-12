@@ -109,7 +109,7 @@ def sortAccounts(acctFile, dict):
         # Otherwise create a new account object and store in dictionary
         accountId = row['id']
         parent = row['parent_id']
-        newAccount = Account(accountId, '', '', None, None, parent, '', 0, 0)
+        newAccount = Account(accountId, None, None, None, None, parent, '', 0, 0)
         dict[accountId] = newAccount
 
         tempDict[accountId] = parent
@@ -127,8 +127,7 @@ def acctSubscriptions(subscriptionFile, dict):
         # Add items to dict
         subID = row['id']
         acctID = row['account_id']
-
-        dict[acctID].getSub().append(subID)
+        dict[acctID].setSubs(subID)
 
     print('Finished dict 2')
 
@@ -159,7 +158,7 @@ def moneyOwed(subscriptionItemFile, dict):
             # Otherwise subscription is active
             subtotal = total(quant, prce, disc)
 
-        # Append subtotal to subdict
+        # Append subtotal to dict
         if subID in subdict:
             subdict[subID] += subtotal
         else:
@@ -167,13 +166,16 @@ def moneyOwed(subscriptionItemFile, dict):
 
     # Now append this information to dict
     for key, value in dict.items():
-        subscriptions = value.getSub()
-        for subscription in subscriptions:
-            for sub in subscription:
-                if sub in subdict:
-                    value.setArr(subdict[sub])
+        subscription = value.getSub()
+        if subscription[0] == None:
+            continue
+        elif subscription in subdict:
+            #print(subscription)
+            subtotal = subdict[subscription]
+            #print(subtotal)
+            value.setArr(subdict[subscription])
+                
         
-
     print('Finished dict 3')
 
 
@@ -190,8 +192,7 @@ def findChildren(dict):
         else:
             # item has a parent, so it is parent's child
             parentId = value.getParent()
-            if pd.isna(parentId) == False:
-                dict[parentId].setParent(key)
+            dict[parentId].setParent(key)
     
     print("Finished dict 4")
 
@@ -221,10 +222,10 @@ Takes account_id and checks dict2 and dict3 to
 return money owed aka arr using dictionary comprehension
 """
 def getArr(accountId, dict):
-    arr = 0
     # Check if in dict
     if accountId in dict:
         arr = dict[accountId].getArr()
+        #print(arr)
 
     return arr
 
@@ -236,13 +237,16 @@ where account_id is the parent
 """
 def getHierarchyArr(accountId, arr, dict):
     hierarchyArr = arr
-    
+
     # If list is empty, no children, return 
     # hierarchyArr = arr
-    if len(dict[accountId].getChildren()) > 0:
-        children = dict[accountId].getChildren()
-    else:
-        return hierarchyArr
+    #if len(dict[accountId].getChildren()) > 0:
+        
+    #else:
+    #    return hierarchyArr
+
+    children = dict[accountId].getChildren()
+    print(children)
 
     # Otherwise BFS to check for children
     descendants = []
@@ -258,8 +262,12 @@ def getHierarchyArr(accountId, arr, dict):
 
         # add current child account's arr value
         # to hierarchyArr
+
+        #print(current_account)
+
         if current_account in dict:
             hierarchyArr += dict[current_account].getArr()
+
 
         # Check if the account has children
         if len(dict[current_account].getChildren()) > 0:
@@ -293,8 +301,7 @@ def fillColumns(fp, fp2, fp3):
         df5.loc[index, 'ultimate_parent_id'] = findUltParent(acctId, tempDict)
         tempArr = getArr(acctId, dictionary)
         df5.loc[index, 'arr'] = tempArr
-        #df5.loc[index, 'hierarchy_arr'] = 
-        #print(getHierarchyArr(acctId, dictionary))
+        df5.loc[index, 'hierarchy_arr'] = getHierarchyArr(acctId, tempArr, dictionary)
 
         #print(row['ultimate_parent_id'], row['arr'], row['hierarchy_arr'])
     
