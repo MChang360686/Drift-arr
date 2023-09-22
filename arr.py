@@ -2,10 +2,9 @@ import pandas as pd
 from datetime import datetime
 from collections import deque
 import time
-from dotenv import load_dotenv
 
 
-# TODO use Objects in one dictionary
+# TODO fix setting children in findChildren() by making a second dictionary of {parent : [children]}
 
 
 
@@ -98,8 +97,10 @@ def countRevenue(startDate, endDate):
 # go through accounts and add key value pairs
 # {account id : object} to the dictionary
 # Additionally, create a temporary dict for later usage
+# with {parent : [children]}
 def sortAccounts(acctFile, dict):
     tempDict = {}
+    parentAndChildren = {}
     df = pd.read_csv(acctFile)
 
     for index, row in df.iterrows():
@@ -113,6 +114,21 @@ def sortAccounts(acctFile, dict):
         dict[accountId] = newAccount
 
         tempDict[accountId] = parent
+
+        # Next, check if the parent is in the dictionary parentAndChildren
+        # If yes, add a new child to its list.  If no, add it
+
+        if parent in parentAndChildren:
+            parentAndChildren[parent].append(accountId)
+        else:
+            parentAndChildren[parent] = [accountId]
+
+    
+    for parent, children in parentAndChildren.items():
+        if parent in tempDict.keys() and type(tempDict[parent]) == Account:
+            for child in children:
+                tempDict[parent].setChildren(child)
+        
 
     print('Finished dict 1')
     return tempDict
@@ -191,8 +207,9 @@ def findChildren(dict):
             dict[key].setChild(key)
         else:
             # item has a parent, so it is parent's child
-            parentId = value.getParent()
-            dict[parentId].setParent(key)
+            #parentId = value.getParent()
+            #dict[parentId].setParent(key)
+            pass
     
     print("Finished dict 4")
 
@@ -246,7 +263,7 @@ def getHierarchyArr(accountId, arr, dict):
     #    return hierarchyArr
 
     children = dict[accountId].getChildren()
-    print(children)
+    #print(children)
 
     # Otherwise BFS to check for children
     descendants = []
